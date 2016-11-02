@@ -1,2 +1,2 @@
-# notes
-Notes
+# neon
+Deep Learning framework

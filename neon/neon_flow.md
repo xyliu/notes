@@ -5,9 +5,9 @@ alxnet.py:
 
 ## Background
 
-[Neon Design Decisions](http://neon.nervanasys.com/docs/latest/design.html)
-[Convolutional Neural Networks](http://cs231n.github.io/convolutional-networks/)
-[Neon code](https://github.com/nervanasystems/neon)
+ * [Neon Design Decisions](http://neon.nervanasys.com/docs/latest/design.html)
+ * [Convolutional Neural Networks](http://cs231n.github.io/convolutional-networks/)
+ * [Neon code](https://github.com/nervanasystems/neon)
 
 ## fprop
 
@@ -114,7 +114,7 @@ def configure(self, in_obj):
 ```python
     def fprop(self, inputs, inference=False, beta=0.0):
         self.inputs = inputs
-        self.be.fprop_conv(self.nglayer, inputs, self.W, self.outputs, 
+        self.be.fprop_conv(self.nglayer, inputs, self.W, self.outputs,$
                             beta=beta, bsum=self.batch_sum)
         return self.outputs
 ```
@@ -133,46 +133,22 @@ def configure(self, in_obj):
 ```python
     def xprop_conv(self, I, F, O, X=None, bias=None, bsum=None, alpha=1.0, beta=0.0,
                    relu=False, brelu=False, slope=0.0, backward=False):
+        if X is None:
+            X = O
 
-        if not backward:
-            C, D, H, W, N = self.dimI
-            C, T, R, S, K = self.dimF
-            K, M, P, Q, N = self.dimO
-            pad_d, pad_h, pad_w = self.padding
-            str_d, str_h, str_w = self.strides
-
-            I = I._tensor.reshape(self.dimI)
-            O1 = O._tensor.reshape(self.dimO)
-            O._tensor.resize(self.dimO)
-
-            inPtr = c_longlong(I.ctypes.data)
-            outPtr = c_longlong(O1.ctypes.data)
-            weightPtr = c_longlong(F._tensor.ctypes.data)
-            if bias:
-                biasPtr = bias._tensor.ctypes.data
-            else:
-                biasPtr = 0
-            primitives = c_longlong(self.dnnPrimitives.ctypes.data)
-            self.mklEngine.SpatialConvolution_MKLDNN_forward(inPtr,outPtr,weightPtr,biasPtr,primitives,self.initOk,N,C,H,W,S,R,str_h,str_w,pad_w,pad_h,K,P,Q)
-            self.initOk = 1
+        if backward:
+            I = I._tensor.reshape(self.dimO)
+            O = O._tensor.reshape(self.dimI)
+            X = X._tensor.reshape(self.dimI)
         else:
-            if X is None:
-                X = O
-
-            if backward:
-                I = I._tensor.reshape(self.dimO)
-                O = O._tensor.reshape(self.dimI)
-                X = X._tensor.reshape(self.dimI)
-            else:
-                I = I._tensor.reshape(self.dimI)
-                O = O._tensor.reshape(self.dimO)
-                X = X._tensor.reshape(self.dimO)
-            F = F._tensor.reshape(self.dimF)
-            if bias is not None:
-                bias = bias._tensor.reshape((O.shape[0], 1))
-            if bsum is not None:
-                bsum = bsum._tensor.reshape((O.shape[0], 1))
-
+            I = I._tensor.reshape(self.dimI)
+            O = O._tensor.reshape(self.dimO)
+            X = X._tensor.reshape(self.dimO)
+        F = F._tensor.reshape(self.dimF)
+        if bias is not None:
+            bias = bias._tensor.reshape((O.shape[0], 1))
+        if bsum is not None:
+            bsum = bsum._tensor.reshape((O.shape[0], 1))
 ```
 
 ### Full Connection Layer fprop (Linear::fprop())
@@ -462,7 +438,7 @@ def configure(self, in_obj):
 
 `Model::BenchMark()  ==> Model::bprop() ==> Sequential::bprop() ==> XXX_Layer::bprop()`
 
-```python 
+```python
 # Model::bprop()
     def bprop(self, delta):
         """
@@ -701,8 +677,8 @@ def configure(self, in_obj):
 ## note
 
 反复 {
-    Sequential::frop() 遍历模型中各层，先依次计算每层的fprop（）
-    计算error
-    Sequential::brop() 遍历模型中各层，先依次计算每层的bprop（）
-    Sequential::optimizer() 遍历模型中各层，并优化
+    1. Sequential::frop() 遍历模型中各层，先依次计算每层的fprop（）
+    2. 计算error
+    3. Sequential::brop() 遍历模型中各层，先依次计算每层的bprop（）
+    4. Sequential::optimizer() 遍历模型中各层，并优化
 }
