@@ -196,4 +196,88 @@ model = new QSqlRelationalTableModel(this);
 model->setTable(albumTable);
 model->setRelation(2, QSqlRelation(artistTable, "id", "artist"));
 model->select();
+
+```
+
+* add a new record
+
+![](sc_dlg_add_album.png)
+
+the sequence is to check whether the artist exists, if not, update the [artists] table first, then add the record to the [albums] table.
+
+```
+submit() --> findArtistId(artist)
+             --> addNewArtist(artist)
+         --> addNewAlbum(title, artistId)
+```
+
+``` cpp
+    int artistId = findArtistId(artist);
+    int albumId = addNewAlbum(title, artistId);
+```
+
+``` cpp
+int Dialog::addNewAlbum(const QString &title, int artistId)
+{
+    int id = generateAlbumId();
+    QSqlRecord record;
+
+    QSqlField f1("albumid", QVariant::Int);
+    QSqlField f2("title", QVariant::String);
+    QSqlField f3("artistid", QVariant::Int);
+    QSqlField f4("year", QVariant::Int);
+
+    f1.setValue(QVariant(id));
+    f2.setValue(QVariant(title));
+    f3.setValue(QVariant(artistId));
+    f4.setValue(QVariant(yearEditor->value()));
+    record.append(f1);
+    record.append(f2);
+    record.append(f3);
+    record.append(f4);
+
+    model->insertRecord(-1, record);
+    return id;
+}
+
+```
+
+``` cpp
+int Dialog::findArtistId(const QString &artist)
+{
+    QSqlTableModel *artistModel = model->relationModel(2);
+    int row = 0;
+
+    while (row < artistModel->rowCount()) {
+        QSqlRecord record = artistModel->record(row);
+        if (record.value("artist") == artist)
+            return record.value("id").toInt();
+        else
+            row++;
+    }
+    return addNewArtist(artist);
+}
+
+
+int Dialog::addNewArtist(const QString &name)
+{
+    QSqlTableModel *artistModel = model->relationModel(2);
+    QSqlRecord record;
+
+    int id = generateArtistId();
+
+    QSqlField f1("id", QVariant::Int);
+    QSqlField f2("artist", QVariant::String);
+    QSqlField f3("albumcount", QVariant::Int);
+
+    f1.setValue(QVariant(id));
+    f2.setValue(QVariant(name));
+    f3.setValue(QVariant(0));
+    record.append(f1);
+    record.append(f2);
+    record.append(f3);
+
+    artistModel->insertRecord(-1, record);
+    return id;
+}
 ```
