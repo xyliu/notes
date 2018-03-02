@@ -1,5 +1,19 @@
 # Minimal JNI example
 
+```
+Six steps to call C/C++ from Java code
+The process of calling C or C ++ from Java programs consists of six steps. We'll go over each step in depth in the sections that follow, but let's start with a quick look at each one.
+
+* Write the Java code. We'll start by writing Java classes to perform three tasks: declare the native method we'll be calling; load the shared library containing the native code; and call the native method.
+* Compile the Java code. We must successfully compile the Java class or classes to bytecode before we can use them.
+* Create the C/C++ header file. The C/C++ header file will declare the native function signature that we want to call. This header will then be used with the C/C++ function implementation (see Step 4) to create the shared library (see Step 5).
+* Write the C/C++ code. This step consists of implementing the function in a C or C++ source code file. The C/C++ source file must include the header file we created in Step 3.
+* Create the shared library file. We'll create a shared library file from the C source code file we created in Step 4.
+* Run the Java program. We'll run the code and see if it works. We'll also go over some tips for dealing with the more commonly occurring errors.
+
+```
 ## REF
  * https://stackoverflow.com/questions/6101311/what-is-the-native-keyword-in-java-for
+ * https://www.ibm.com/developerworks/java/tutorials/j-jni/j-jni.html
+ * https://www.cnblogs.com/rocomp/p/4892866.html
 
